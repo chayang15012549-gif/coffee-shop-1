@@ -63,6 +63,34 @@ def generate_product_description(product_name: str, product_price: float = None)
         print(f"Error generating description: {str(e)}")
         return f"กาแฟพรีเมียม: {product_name} - คุณภาพดี ลิ้มสดชื่น"
 
+def ask_ai_question(question: str) -> str:
+    """ตอบคำถามเกี่ยวกับกาแฟด้วย OpenAI API"""
+    if not openai_client:
+        return "ขออภัย ระบบ AI ยังไม่พร้อมใช้งาน กรุณาติดต่อผู้ดูแลระบบ"
+    
+    try:
+        prompt = f"""คุณเป็นผู้เชี่ยวชาญด้านกาแฟและยังเป็นเจ้าหน้าที่ของร้านกาแฟ Deluxe Cafe 
+กรุณาตอบคำถามต่อไปนี้เกี่ยวกับกาแฟ ประเภทกาแฟ วิธีการดื่ม สุขภาพ และสินค้าของเรา
+ตอบอย่างเป็นมิตร สั้นกระชับ และมีประโยชน์ (ไม่เกิน 150 คำ)
+
+คำถาม: {question}
+
+ตอบเป็นภาษาไทยเท่านั้น"""
+        
+        message = openai_client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are a friendly and knowledgeable coffee expert and barista at Deluxe Cafe coffee shop. You help customers with coffee knowledge, product information, and brewing advice in Thai."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=200,
+            temperature=0.7
+        )
+        return message.choices[0].message.content.strip()
+    except Exception as e:
+        print(f"Error answering question: {str(e)}")
+        return f"ขออภัย ไม่สามารถประมวลผลคำถามได้ กรุณาลองใหม่"
+
 # ==================== Models ====================
 class Product(db.Model):
     """Model สำหรับตาราง Product"""
@@ -139,6 +167,25 @@ def generate_description():
         
         description = generate_product_description(product_name, product_price)
         return jsonify({'description': description, 'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e), 'success': False}), 400
+
+@app.route('/api/ask-ai', methods=['POST'])
+def api_ask_ai():
+    """API เพื่อถามคำถามเกี่ยวกับกาแฟ"""
+    try:
+        data = request.get_json()
+        question = data.get('question', '').strip()
+        
+        if not question:
+            return jsonify({'error': 'Question is required', 'success': False}), 400
+        
+        # จำกัดความยาวของคำถาม
+        if len(question) > 500:
+            return jsonify({'error': 'Question is too long (max 500 characters)', 'success': False}), 400
+        
+        answer = ask_ai_question(question)
+        return jsonify({'answer': answer, 'success': True})
     except Exception as e:
         return jsonify({'error': str(e), 'success': False}), 400
 
