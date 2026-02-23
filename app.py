@@ -124,7 +124,7 @@ def update_product(product_id):
             product.description = data['description']
         
         db.session.commit()
-        return jsonify({'message': 'Product updated successfully', 'product': product.to_dict()})
+        return jsonify({'success': True, 'message': 'Product updated successfully', 'product': product.to_dict()})
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 400

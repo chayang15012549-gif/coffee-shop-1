@@ -231,6 +231,118 @@
             transform: scale(1.05);
         }
 
+        .customize-btn {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 0.7rem 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .customize-btn:hover {
+            background: #7CB342;
+            transform: scale(1.05);
+        }
+
+        .customize-section {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 10px;
+            border: 2px solid var(--accent-color);
+            display: none;
+        }
+
+        .customize-section.active {
+            display: block;
+        }
+
+        .customize-section h5 {
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-size: 1rem;
+        }
+
+        .customize-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .customize-group label {
+            display: block;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 0.7rem;
+            font-size: 0.95rem;
+        }
+
+        .customize-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+        }
+
+        .customize-options input[type="radio"],
+        .customize-options input[type="checkbox"] {
+            display: none;
+        }
+
+        .customize-option-label {
+            padding: 0.6rem 1rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .customize-options input[type="radio"]:checked + .customize-option-label,
+        .customize-options input[type="checkbox"]:checked + .customize-option-label {
+            background: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+
+        .customize-option-label:hover {
+            border-color: var(--accent-color);
+            background: rgba(107, 142, 35, 0.1);
+        }
+
+        .customize-textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-family: 'Poppins', sans-serif;
+            resize: vertical;
+            font-size: 0.95rem;
+        }
+
+        .customize-done-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.7rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .customize-done-btn:hover {
+            background: var(--secondary-color);
+            transform: scale(1.05);
+        }
+
         .empty-cart {
             text-align: center;
             padding: 3rem 2rem;
@@ -445,8 +557,74 @@
                                 <input type="number" value="1" readonly>
                                 <button>+</button>
                             </div>
+                            <button class="customize-btn" onclick="toggleCustomize(this)">
+                                <i class="fas fa-edit"></i> Customize
+                            </button>
                             <button class="remove-btn">
                                 <i class="fas fa-trash"></i> Remove
+                            </button>
+                        </div>
+
+                        <!-- Customization Section -->
+                        <div class="customize-section">
+                            <h5><i class="fas fa-cog"></i> Customize Your Order</h5>
+                            
+                            <!-- Size Selection -->
+                            <div class="customize-group">
+                                <label>Choose Size:</label>
+                                <div class="customize-options">
+                                    <input type="radio" name="size_1" id="size_small_1" value="small">
+                                    <label for="size_small_1" class="customize-option-label">Small (250ml)</label>
+                                    
+                                    <input type="radio" name="size_1" id="size_medium_1" value="medium" checked>
+                                    <label for="size_medium_1" class="customize-option-label">Medium (350ml)</label>
+                                    
+                                    <input type="radio" name="size_1" id="size_large_1" value="large">
+                                    <label for="size_large_1" class="customize-option-label">Large (450ml)</label>
+                                </div>
+                            </div>
+
+                            <!-- Roast Level -->
+                            <div class="customize-group">
+                                <label>Roast Level:</label>
+                                <div class="customize-options">
+                                    <input type="radio" name="roast_1" id="roast_light_1" value="light">
+                                    <label for="roast_light_1" class="customize-option-label">Light</label>
+                                    
+                                    <input type="radio" name="roast_1" id="roast_medium_1" value="medium" checked>
+                                    <label for="roast_medium_1" class="customize-option-label">Medium</label>
+                                    
+                                    <input type="radio" name="roast_1" id="roast_dark_1" value="dark">
+                                    <label for="roast_dark_1" class="customize-option-label">Dark</label>
+                                </div>
+                            </div>
+
+                            <!-- Add-ons -->
+                            <div class="customize-group">
+                                <label>Add-ons:</label>
+                                <div class="customize-options">
+                                    <input type="checkbox" id="addon_shot_1" value="extra_shot">
+                                    <label for="addon_shot_1" class="customize-option-label">Extra Shot (+฿20)</label>
+                                    
+                                    <input type="checkbox" id="addon_vanilla_1" value="vanilla">
+                                    <label for="addon_vanilla_1" class="customize-option-label">Vanilla (+฿15)</label>
+                                    
+                                    <input type="checkbox" id="addon_chocolate_1" value="chocolate">
+                                    <label for="addon_chocolate_1" class="customize-option-label">Chocolate (+฿15)</label>
+                                    
+                                    <input type="checkbox" id="addon_caramel_1" value="caramel">
+                                    <label for="addon_caramel_1" class="customize-option-label">Caramel (+฿15)</label>
+                                </div>
+                            </div>
+
+                            <!-- Special Notes -->
+                            <div class="customize-group">
+                                <label for="notes_1">Special Notes:</label>
+                                <textarea id="notes_1" placeholder="e.g., Extra hot, less sugar..." class="customize-textarea" rows="2"></textarea>
+                            </div>
+
+                            <button class="customize-done-btn" onclick="toggleCustomize(this)">
+                                <i class="fas fa-check"></i> Done
                             </button>
                         </div>
                     </div>
@@ -466,8 +644,74 @@
                                 <input type="number" value="2" readonly>
                                 <button>+</button>
                             </div>
+                            <button class="customize-btn" onclick="toggleCustomize(this)">
+                                <i class="fas fa-edit"></i> Customize
+                            </button>
                             <button class="remove-btn">
                                 <i class="fas fa-trash"></i> Remove
+                            </button>
+                        </div>
+
+                        <!-- Customization Section -->
+                        <div class="customize-section">
+                            <h5><i class="fas fa-cog"></i> Customize Your Order</h5>
+                            
+                            <!-- Size Selection -->
+                            <div class="customize-group">
+                                <label>Choose Size:</label>
+                                <div class="customize-options">
+                                    <input type="radio" name="size_2" id="size_small_2" value="small">
+                                    <label for="size_small_2" class="customize-option-label">Small (250ml)</label>
+                                    
+                                    <input type="radio" name="size_2" id="size_medium_2" value="medium" checked>
+                                    <label for="size_medium_2" class="customize-option-label">Medium (350ml)</label>
+                                    
+                                    <input type="radio" name="size_2" id="size_large_2" value="large">
+                                    <label for="size_large_2" class="customize-option-label">Large (450ml)</label>
+                                </div>
+                            </div>
+
+                            <!-- Roast Level -->
+                            <div class="customize-group">
+                                <label>Roast Level:</label>
+                                <div class="customize-options">
+                                    <input type="radio" name="roast_2" id="roast_light_2" value="light">
+                                    <label for="roast_light_2" class="customize-option-label">Light</label>
+                                    
+                                    <input type="radio" name="roast_2" id="roast_medium_2" value="medium" checked>
+                                    <label for="roast_medium_2" class="customize-option-label">Medium</label>
+                                    
+                                    <input type="radio" name="roast_2" id="roast_dark_2" value="dark">
+                                    <label for="roast_dark_2" class="customize-option-label">Dark</label>
+                                </div>
+                            </div>
+
+                            <!-- Add-ons -->
+                            <div class="customize-group">
+                                <label>Add-ons:</label>
+                                <div class="customize-options">
+                                    <input type="checkbox" id="addon_shot_2" value="extra_shot">
+                                    <label for="addon_shot_2" class="customize-option-label">Extra Shot (+฿20)</label>
+                                    
+                                    <input type="checkbox" id="addon_vanilla_2" value="vanilla">
+                                    <label for="addon_vanilla_2" class="customize-option-label">Vanilla (+฿15)</label>
+                                    
+                                    <input type="checkbox" id="addon_chocolate_2" value="chocolate">
+                                    <label for="addon_chocolate_2" class="customize-option-label">Chocolate (+฿15)</label>
+                                    
+                                    <input type="checkbox" id="addon_caramel_2" value="caramel">
+                                    <label for="addon_caramel_2" class="customize-option-label">Caramel (+฿15)</label>
+                                </div>
+                            </div>
+
+                            <!-- Special Notes -->
+                            <div class="customize-group">
+                                <label for="notes_2">Special Notes:</label>
+                                <textarea id="notes_2" placeholder="e.g., Extra hot, less sugar..." class="customize-textarea" rows="2"></textarea>
+                            </div>
+
+                            <button class="customize-done-btn" onclick="toggleCustomize(this)">
+                                <i class="fas fa-check"></i> Done
                             </button>
                         </div>
                     </div>
@@ -508,7 +752,7 @@
                     <span class="value">฿1,241</span>
                 </div>
 
-                <button class="checkout-btn">
+                <button class="checkout-btn" onclick="processCheckout()">
                     <i class="fas fa-credit-card"></i> Checkout Now
                 </button>
 
@@ -525,5 +769,60 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Toggle customize section
+        function toggleCustomize(btn) {
+            const cartItem = btn.closest('.cart-item');
+            const customizeSection = cartItem.querySelector('.customize-section');
+            customizeSection.classList.toggle('active');
+        }
+
+        // Process checkout and go to receipt
+        function processCheckout() {
+            // Collect cart items data
+            const cartItems = [];
+            document.querySelectorAll('.cart-item').forEach((item, index) => {
+                const name = item.querySelector('.item-name').textContent;
+                const price = item.querySelector('.item-price').textContent.replace('฿', '');
+                const qty = item.querySelector('.quantity-control input').value;
+                
+                // Get customizations
+                const size = item.querySelector('input[name="size_' + (index + 1) + '"]:checked')?.value || 'medium';
+                const roast = item.querySelector('input[name="roast_' + (index + 1) + '"]:checked')?.value || 'medium';
+                const addons = [];
+                item.querySelectorAll('input[type="checkbox"]:checked').forEach(addon => {
+                    addons.push(addon.value);
+                });
+                const notes = item.querySelector('textarea')?.value || '';
+                
+                cartItems.push({
+                    id: index + 1,
+                    name: name,
+                    price: price,
+                    quantity: qty,
+                    size: size,
+                    roast: roast,
+                    addons: addons,
+                    notes: notes
+                });
+            });
+            
+            // Store order data in sessionStorage
+            const orderData = {
+                items: cartItems,
+                subtotal: 1110,
+                shipping: 50,
+                tax: 81,
+                total: 1241,
+                orderDate: new Date().toLocaleString('th-TH'),
+                orderNumber: 'ORD-' + Date.now()
+            };
+            
+            sessionStorage.setItem('orderData', JSON.stringify(orderData));
+            
+            // Redirect to receipt page
+            window.location.href = '/receipt';
+        }
+    </script>
 </body>
 </html>
