@@ -1,7 +1,11 @@
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_file
 from flask_sqlalchemy import SQLAlchemy
 import os
 from werkzeug.utils import secure_filename
+import qrcode
+from io import BytesIO
+from urllib.parse import urljoin
+import socket
 
 # สร้าง Flask Application
 app = Flask(__name__)
@@ -235,6 +239,54 @@ def admin():
     else:
         return redirect(url_for('login'))
 
+# ==================== QR Code Route ====================
+
+@app.route('/qr')
+def qr_page():
+    """แสดงหน้า QR Code สำหรับสั่งซื้อ"""
+    return render_template('qr.html')
+
+@app.route('/order')
+def order():
+    """หน้าสั่งซื้อจาก QR Code"""
+    return render_template('order.html')
+
+@app.route('/api/qr-code')
+def generate_qr_code():
+    """สร้าง QR Code ที่ชี้ไปยังหน้าสั่งซื้อ"""
+    try:
+        # ได้ IP Address ของเซิร์ฟเวอร์
+        host_ip = request.host.split(':')[0]
+        if host_ip == 'localhost' or host_ip == '127.0.0.1':
+            # ถ้ารัน localhost ให้ใช้ IP address จริงของเครื่อง
+            hostname = socket.gethostname()
+            host_ip = socket.gethostbyname(hostname)
+        
+        # สร้าง URL ที่เต็มไปด้วยโดเมนสำหรับ QR Code - ชี้ไปหน้า /order
+        ordering_url = f'http://{host_ip}:5000' + url_for('order')
+        
+        # สร้าง QR Code
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,
+            box_size=10,
+            border=4,
+        )
+        qr.add_data(ordering_url)
+        qr.make(fit=True)
+        
+        # สร้างรูปภาพ
+        img = qr.make_image(fill_color="black", back_color="white")
+        
+        # บันทึกลงใน BytesIO
+        img_io = BytesIO()
+        img.save(img_io, 'PNG')
+        img_io.seek(0)
+        
+        return send_file(img_io, mimetype='image/png', as_attachment=False)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
 # ==================== Database Initialization ====================
 
 def seed_products():
@@ -334,13 +386,21 @@ def init_db():
 if __name__ == '__main__':
     init_db()
     
-    print("\n" + "="*50)
-    print("🚀 Starting Deluxe Cafe Flask App")
-    print("="*50)
-    print("📱 Server running at: http://localhost:5000")
-    print("🔧 Admin page at: http://localhost:5000/admin")
-    print("🔌 API Base URL: http://localhost:5000/api")
-    print("="*50 + "\n")
+    # ได้ IP Address ของเครื่อง
+    hostname = socket.gethostname()
+    local_ip = socket.gethostbyname(hostname)
     
-    # รัน Flask app
-    app.run(debug=True, host='localhost', port=5000)
+    print("\n" + "="*60)
+    print("🚀 Starting Deluxe Cafe Flask App")
+    print("="*60)
+    print("📱 Local Access:  http://localhost:5000")
+    print(f"📱 Mobile Access: http://{local_ip}:5000")
+    print(f"🔧 Admin page:    http://{local_ip}:5000/admin")
+    print(f"📊 QR Code:       http://{local_ip}:5000/qr")
+    print(f"🛒 Order Page:    http://{local_ip}:5000/order")
+    print(f"🔌 API Base URL:  http://{local_ip}:5000/api")
+    print("="*60 + "\n")
+    print("💡 Tip: Scan the QR Code with your phone to order!\n")
+    
+    # รัน Flask app - ผูกกับ 0.0.0.0 เพื่อให้สามารถเข้าจากโทรศัพท์ได้
+    app.run(debug=True, host='0.0.0.0', port=5000)
