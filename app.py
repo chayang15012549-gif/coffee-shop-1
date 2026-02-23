@@ -1,11 +1,13 @@
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_file
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 import os
 from werkzeug.utils import secure_filename
-import qrcode
-from io import BytesIO
-from urllib.parse import urljoin
 import socket
+try:
+    from openai import OpenAI
+    OPENAI_AVAILABLE = True
+except ImportError:
+    OPENAI_AVAILABLE = False
 
 # สร้าง Flask Application
 app = Flask(__name__)
@@ -21,6 +23,45 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # เริ่มต้น SQLAlchemy
 db = SQLAlchemy(app)
+
+# ==================== OpenAI Configuration ====================
+openai_client = None
+if OPENAI_AVAILABLE:
+    api_key = os.getenv('OPENAI_API_KEY')
+    if api_key:
+        openai_client = OpenAI(api_key=api_key)
+
+def generate_product_description(product_name: str, product_price: float = None) -> str:
+    """สร้างรายละเอียดสินค้าด้วย OpenAI API"""
+    if not openai_client:
+        return f"กาแฟพรีเมียม: {product_name}"
+    
+    try:
+        price_info = f" ราคา {product_price} บาท" if product_price else ""
+        prompt = f"""สร้างคำอธิบายสินค้ากาแฟสั้นๆ (ไม่เกิน 100 คำ) สำหรับ:
+ชื่อสินค้า: {product_name}
+{price_info}
+
+ให้รายละเอียดเกี่ยวกับ:
+- คุณสมบัติของกาแฟ
+- ลักษณะรสชาติ
+- อันดับเหมาะสำหรับคนไหน
+
+ตอบเป็นภาษาไทยเท่านั้น"""
+        
+        message = openai_client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are a helpful coffee shop assistant that creates engaging product descriptions in Thai."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=150,
+            temperature=0.7
+        )
+        return message.choices[0].message.content.strip()
+    except Exception as e:
+        print(f"Error generating description: {str(e)}")
+        return f"กาแฟพรีเมียม: {product_name} - คุณภาพดี ลิ้มสดชื่น"
 
 # ==================== Models ====================
 class Product(db.Model):
@@ -81,6 +122,25 @@ def get_products():
     """API เพื่อดึงข้อมูลสินค้าทั้งหมด"""
     products = Product.query.all()
     return jsonify([product.to_dict() for product in products])
+
+@app.route('/api/generate-description', methods=['POST'])
+def generate_description():
+    """API เพื่อสร้างรายละเอียดสินค้าด้วย AI"""
+    if not session.get('logged_in'):
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    try:
+        data = request.get_json()
+        product_name = data.get('name')
+        product_price = data.get('price')
+        
+        if not product_name:
+            return jsonify({'error': 'Product name is required'}), 400
+        
+        description = generate_product_description(product_name, product_price)
+        return jsonify({'description': description, 'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e), 'success': False}), 400
 
 @app.route('/api/products/<int:product_id>', methods=['GET'])
 def get_product(product_id):
@@ -239,53 +299,7 @@ def admin():
     else:
         return redirect(url_for('login'))
 
-# ==================== QR Code Route ====================
 
-@app.route('/qr')
-def qr_page():
-    """แสดงหน้า QR Code สำหรับสั่งซื้อ"""
-    return render_template('qr.html')
-
-@app.route('/order')
-def order():
-    """หน้าสั่งซื้อจาก QR Code"""
-    return render_template('order.html')
-
-@app.route('/api/qr-code')
-def generate_qr_code():
-    """สร้าง QR Code ที่ชี้ไปยังหน้าสั่งซื้อ"""
-    try:
-        # ได้ IP Address ของเซิร์ฟเวอร์
-        host_ip = request.host.split(':')[0]
-        if host_ip == 'localhost' or host_ip == '127.0.0.1':
-            # ถ้ารัน localhost ให้ใช้ IP address จริงของเครื่อง
-            hostname = socket.gethostname()
-            host_ip = socket.gethostbyname(hostname)
-        
-        # สร้าง URL ที่เต็มไปด้วยโดเมนสำหรับ QR Code - ชี้ไปหน้า /order
-        ordering_url = f'http://{host_ip}:5000' + url_for('order')
-        
-        # สร้าง QR Code
-        qr = qrcode.QRCode(
-            version=1,
-            error_correction=qrcode.constants.ERROR_CORRECT_L,
-            box_size=10,
-            border=4,
-        )
-        qr.add_data(ordering_url)
-        qr.make(fit=True)
-        
-        # สร้างรูปภาพ
-        img = qr.make_image(fill_color="black", back_color="white")
-        
-        # บันทึกลงใน BytesIO
-        img_io = BytesIO()
-        img.save(img_io, 'PNG')
-        img_io.seek(0)
-        
-        return send_file(img_io, mimetype='image/png', as_attachment=False)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 400
 
 # ==================== Database Initialization ====================
 
@@ -396,11 +410,8 @@ if __name__ == '__main__':
     print("📱 Local Access:  http://localhost:5000")
     print(f"📱 Mobile Access: http://{local_ip}:5000")
     print(f"🔧 Admin page:    http://{local_ip}:5000/admin")
-    print(f"📊 QR Code:       http://{local_ip}:5000/qr")
-    print(f"🛒 Order Page:    http://{local_ip}:5000/order")
-    print(f"🔌 API Base URL:  http://{local_ip}:5000/api")
+    print(f"� API Base URL:  http://{local_ip}:5000/api")
     print("="*60 + "\n")
-    print("💡 Tip: Scan the QR Code with your phone to order!\n")
     
     # รัน Flask app - ผูกกับ 0.0.0.0 เพื่อให้สามารถเข้าจากโทรศัพท์ได้
     app.run(debug=True, host='0.0.0.0', port=5000)

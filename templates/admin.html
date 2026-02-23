@@ -167,6 +167,40 @@
             box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
         }
 
+        .btn-ai-generate {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 0.8rem 1.2rem;
+            border: none;
+            border-radius: 5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            font-size: 0.9rem;
+        }
+
+        .btn-ai-generate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-ai-generate:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-ai-generate.loading {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
         /* Products Table */
         .products-section {
             background: white;
@@ -671,12 +705,26 @@
 
                     <div class="form-group">
                         <label for="description">คำอธิบายสินค้า</label>
-                        <textarea 
-                            id="description" 
-                            name="description" 
-                            rows="3"
-                            placeholder="เช่น กาแฟอาราบิก้าคุณภาพสูงจากเอธิโอเปีย"
-                        ></textarea>
+                        <div style="display: flex; gap: 0.5rem; align-items: flex-start;">
+                            <textarea 
+                                id="description" 
+                                name="description" 
+                                rows="3"
+                                placeholder="เช่น กาแฟอาราบิก้าคุณภาพสูงจากเอธิโอเปีย"
+                            ></textarea>
+                            <button 
+                                type="button" 
+                                id="ai-generate-btn" 
+                                class="btn-ai-generate"
+                                title="สร้างรายละเอียดด้วย AI"
+                                style="height: fit-content; margin-top: 0.8rem;"
+                            >
+                                <i class="fas fa-wand-magic-sparkles"></i> AI
+                            </button>
+                        </div>
+                        <small style="color: #666; font-size: 0.85rem; margin-top: 0.3rem; display: block;">
+                            💡 Clickปุ่ม AI เพื่อสร้างรายละเอียดอัตโนมัติ
+                        </small>
                     </div>
 
                     <button type="submit" class="submit-btn">
@@ -910,6 +958,62 @@
         document.getElementById('editModal').addEventListener('click', function(e) {
             if (e.target === this) {
                 closeEditModal();
+            }
+        });
+
+        // ==================== AI Description Generator ====================
+        document.getElementById('ai-generate-btn').addEventListener('click', async function(e) {
+            e.preventDefault();
+            
+            const nameInput = document.getElementById('name');
+            const priceInput = document.getElementById('price');
+            const descriptionInput = document.getElementById('description');
+            const button = this;
+
+            if (!nameInput.value.trim()) {
+                alert('กรุณากรอกชื่อสินค้าก่อน');
+                nameInput.focus();
+                return;
+            }
+
+            // Show loading state
+            button.disabled = true;
+            button.classList.add('loading');
+            const originalText = button.innerHTML;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังสร้าง...';
+
+            try {
+                const response = await fetch('/api/generate-description', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: nameInput.value.trim(),
+                        price: priceInput.value ? parseFloat(priceInput.value) : null
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.description) {
+                    // Insert or replace the description
+                    descriptionInput.value = data.description;
+                    descriptionInput.style.borderColor = '#28A745';
+                    setTimeout(() => {
+                        descriptionInput.style.borderColor = '';
+                    }, 2000);
+                } else {
+                    alert('❌ ' + (data.error || 'ไม่สามารถสร้างรายละเอียด'));
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ เกิดข้อผิดพลาด: ' + error.message);
+            } finally {
+                // Restore button state
+                button.disabled = false;
+                button.classList.remove('loading');
+                button.innerHTML = originalText;
             }
         });
     </script>
