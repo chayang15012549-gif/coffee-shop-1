@@ -1159,9 +1159,33 @@
                 <button id="ai-chat-close"><i class="fas fa-times"></i></button>
             </div>
             <div id="ai-messages"></div>
-            <div class="ai-chat-input-area">
-                <input type="text" id="ai-input" placeholder="ถามเกี่ยวกับกาแฟ..." maxlength="500">
-                <button id="ai-send-btn"><i class="fas fa-paper-plane"></i></button>
+            <div class="ai-presets-container" id="ai-presets-container">
+                <div class="ai-presets-grid">
+                    <div class="ai-preset-category">
+                        <h6>การชง</h6>
+                        <div class="ai-preset-list">
+                            <button class="ai-preset-btn" data-question="วิธีชงกาแฟ pour-over?">Pour-over: วิธีชง</button>
+                            <button class="ai-preset-btn" data-question="วิธีชงกาแฟแบบ French press?">French press: วิธีชง</button>
+                            <button class="ai-preset-btn" data-question="วิธีชงเอสเพรสโซที่บ้าน?">เอสเพรสโซ: วิธีชง</button>
+                        </div>
+                    </div>
+                    <div class="ai-preset-category">
+                        <h6>ความรู้ทั่วไป</h6>
+                        <div class="ai-preset-list">
+                            <button class="ai-preset-btn" data-question="ความแตกต่างระหว่าง Arabica และ Robusta">Arabica vs Robusta</button>
+                            <button class="ai-preset-btn" data-question="วิธีเก็บเมล็ดกาแฟให้คงคุณภาพ">วิธีเก็บเมล็ดกาแฟ</button>
+                            <button class="ai-preset-btn" data-question="แนะนำสายพันธุ์กาแฟสำหรับเอสเพรสโซ">แนะนำสายพันธุ์</button>
+                        </div>
+                    </div>
+                    <div class="ai-preset-category">
+                        <h6>สุขภาพ & เมนู</h6>
+                        <div class="ai-preset-list">
+                            <button class="ai-preset-btn" data-question="ผลกระทบของการดื่มกาแฟต่อสุขภาพ">ผลกระทบต่อสุขภาพ</button>
+                            <button class="ai-preset-btn" data-question="แนะนำเมนูสำหรับคนไม่ชอบรสขม">เมนูสำหรับไม่ชอบขม</button>
+                            <button class="ai-preset-btn" data-question="วิธีลดความขมของกาแฟ">วิธีลดความขม</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1306,21 +1330,9 @@
             setupEventListeners() {
                 const toggleBtn = document.getElementById('ai-chat-toggle');
                 const closeBtn = document.getElementById('ai-chat-close');
-                const sendBtn = document.getElementById('ai-send-btn');
-                const input = document.getElementById('ai-input');
 
                 if (toggleBtn) toggleBtn.addEventListener('click', () => this.toggleChat());
                 if (closeBtn) closeBtn.addEventListener('click', () => this.toggleChat());
-                if (sendBtn) sendBtn.addEventListener('click', () => this.sendMessage());
-                
-                if (input) {
-                    input.addEventListener('keypress', (e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                            e.preventDefault();
-                            this.sendMessage();
-                        }
-                    });
-                }
             },
 
             toggleChat() {
@@ -1331,22 +1343,21 @@
                 if (this.isOpen) {
                     chatBox.classList.add('open');
                     chatWindow.style.display = 'flex';
-                    document.getElementById('ai-input').focus();
+                    const firstBtn = document.querySelector('.ai-preset-btn');
+                    if (firstBtn) firstBtn.focus();
                 } else {
                     chatBox.classList.remove('open');
                     chatWindow.style.display = 'none';
                 }
             },
 
-            sendMessage() {
-                const input = document.getElementById('ai-input');
-                const message = input.value.trim();
-
+            // Send a preset question (called when user clicks a preset button)
+            sendPreset(question) {
+                const message = (question || '').trim();
                 if (!message || this.isLoading) return;
 
                 this.isLoading = true;
                 this.addMessageToChat(message, 'user');
-                input.value = '';
 
                 fetch('/api/ask-ai', {
                     method: 'POST',
@@ -1371,6 +1382,10 @@
                 });
             },
 
+            sendMessage() {
+                // kept for compatibility (no-op)
+            },
+
             addMessageToChat(text, sender) {
                 const messagesContainer = document.getElementById('ai-messages');
                 const messageDiv = document.createElement('div');
@@ -1389,6 +1404,16 @@
         // Initialize AI Chat Widget
         document.addEventListener('DOMContentLoaded', function() {
             AIChatWidget.init();
+            // Delegate clicks on preset buttons
+            const presetsContainer = document.getElementById('ai-presets-container');
+            if (presetsContainer) {
+                presetsContainer.addEventListener('click', function(e) {
+                    const btn = e.target.closest('.ai-preset-btn');
+                    if (btn) {
+                        AIChatWidget.sendPreset(btn.dataset.question);
+                    }
+                });
+            }
         });
     </script>
 
@@ -1457,6 +1482,109 @@
             display: flex;
         }
 
+        #ai-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .ai-message {
+            display: flex;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .ai-message-user {
+            justify-content: flex-end;
+        }
+
+        .ai-message-ai {
+            justify-content: flex-start;
+        }
+
+        .ai-message-content {
+            max-width: 85%;
+            padding: 10px 12px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+
+        .ai-message-user .ai-message-content {
+            background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .ai-message-ai .ai-message-content {
+            background: #f0f0f0;
+            color: var(--text-color);
+            border-bottom-left-radius: 4px;
+        }
+
+        .ai-presets-container {
+            padding: 12px;
+            border-top: 1px solid #f0f0f0;
+            background: #fafafa;
+        }
+
+        .ai-presets-grid {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+            gap: 10px;
+        }
+
+        .ai-preset-category h6 {
+            margin: 0 0 6px 0;
+            font-size: 0.95rem;
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+
+        .ai-preset-list {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .ai-preset-btn {
+            background: white;
+            border: 1px solid #e2e8f0;
+            padding: 8px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: var(--dark-brown);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+            transition: transform 0.12s ease, box-shadow 0.12s ease;
+        }
+
+        .ai-preset-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+        }
+
+        @media (min-width: 720px) {
+            .ai-presets-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
         .ai-chat-header {
             background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
             color: white;
@@ -1487,28 +1615,7 @@
             border-radius: 50%;
         }
 
-        #ai-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            background-color: #f9f9f9;
-        }
-
-        .ai-message {
-            display: flex;
-            margin-bottom: 10px;
-        }
-
-        .ai-message-user {
-            justify-content: flex-end;
-        }
-
-        .ai-message-ai {
-            justify-content: flex-start;
-        }
+        /* send button removed - using preset send */
 
         .ai-message-content {
             max-width: 70%;
@@ -1540,47 +1647,7 @@
             border-radius: 0 0 12px 12px;
         }
 
-        #ai-input {
-            flex: 1;
-            border: 1px solid #ddd;
-            border-radius: 20px;
-            padding: 8px 12px;
-            font-size: 13px;
-            font-family: 'Poppins', sans-serif;
-            resize: none;
-            max-height: 60px;
-            outline: none;
-            transition: border-color 0.3s ease;
-        }
-
-        #ai-input:focus {
-            border-color: var(--secondary-color);
-        }
-
-        #ai-send-btn {
-            background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
-            border: none;
-            color: white;
-            border-radius: 50%;
-            width: 36px;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 16px;
-            transition: all 0.3s ease;
-        }
-
-        #ai-send-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        #ai-send-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
+        /* manual input/button removed */
 
         /* Mobile Responsive */
         @media (max-width: 768px) {

@@ -65,8 +65,58 @@ def generate_product_description(product_name: str, product_price: float = None)
 
 def ask_ai_question(question: str) -> str:
     """ตอบคำถามเกี่ยวกับกาแฟด้วย OpenAI API"""
+    # First, handle preset (canned) questions with deterministic answers
+    q = (question or '').strip()
+    q_norm = q.lower()
+    
+    # Check Thai keywords BEFORE lowercasing (Thai doesn't have case anyway)
+    # English keywords can use lowercased version
+    
+    # French and Espresso with both Thai and English
+    if 'french' in q_norm or 'french press' in q_norm or 'แฟรนช์' in q:
+        return (
+            "วิธีชง French Press: ใส่กาแฟบดหยาบลงในหม้อ โรยลงและเทน้ำร้อน 90-96°C หมั่นนึ่ง 30 วินาที แล้วเทหมดเพิ่มพื้นให้ได้ 90-96°C เฟชเซ (plunger) โดยค่อยๆ กดลง 3-4 นาที ได้รสชาติเข้มข้นและเต็มบอดี้"
+        )
+    if 'espresso' in q_norm or 'เอสเพรส' in q or 'เอสเพรสโซ' in q:
+        return (
+            "วิธีชง เอสเพรสโซ: ใช้เครื่องชงเอสเพรสโซ ใส่กาแฟบดละเอียด (fine grind) ประมาณ 18-20 เมล็ดบด กดแรงพอสมควร (tamping) ขึ้นเครื่องชง ใช้น้ำที่อุณหภูมิ 92-96°C ความดัน 9 บาร์ ชงประมาณ 25-30 วินาที ได้น้ำกาแฟประมาณ 30 มล. ที่มีกลิ่นหอมและรสเข้มข้น"
+        )
+    
+    # Preset mappings (matches by keyword)
+    if any(k in q_norm for k in ['pour-over', 'pour over', 'pourover', 'pour-over?', 'pour'] ) or 'พัวร์' in q:
+        return (
+            "วิธีชง pour-over: อุ่นตัวกรวยและกระดาษกรองด้วยน้ำร้อนก่อน ใส่กาแฟบดขนาดกลาง-หยาบ (อัตราส่วนน้ำต่อกาแฟประมาณ 15:1) เทน้ำรอบแรกเล็กน้อยให้กาแฟบลูม 30-45 วินาที แล้วค่อยๆ เทน้ำเป็นวงกลมจนได้ปริมาณที่ต้องการ ระดับอุณหภูมิน้ำประมาณ 92-96°C จะได้รสชาติที่ชัดเจนและสมดุล"
+        )
+    if 'arabica' in q_norm or 'robusta' in q_norm or 'อาราบิก้า' in q or 'โรบัสต้า' in q:
+        return (
+            "ความแตกต่าง: Arabica ให้กลิ่นหอมซับซ้อนและรสชาติหวาน-เปรี้ยวเล็กน้อย มีกรดผลไม้ ส่วน Robusta มักให้คาเฟอีนมากกว่า รสเข้มและขม เหมาะสำหรับกาแฟที่ต้องการบอดี้หนาหรือผสมในเอสเพรสโซ่"
+        )
+    if 'สุขภาพ' in q or 'ผลกระทบ' in q or 'คนท้อง' in q or 'preg' in q_norm or 'pregnant' in q_norm:
+        return (
+            "ผลกระทบต่อสุขภาพ: การดื่มกาแฟในปริมาณปกติ (1-3 แก้ว/วัน) สำหรับผู้ใหญ่สุขภาพดีมักปลอดภัย คาเฟอีนอาจส่งผลต่อการนอนหรือหัวใจในบางคน ผู้ตั้งครรภ์ควรจำกัดปริมาณและปรึกษาแพทย์ หากมีภาวะสุขภาพควรปรึกษาแพทย์ก่อน"
+        )
+    if 'เก็บ' in q or 'storage' in q_norm:
+        return (
+            "วิธีเก็บเมล็ดกาแฟ: เก็บเมล็ดในภาชนะทึบแสงและปิดสนิท หลีกเลี่ยงความชื้นและความร้อน เก็บที่อุณหภูมิห้องและบดเมื่อจะชงใช้งานเพื่อรักษากลิ่นหอมและรสชาติ"
+        )
+    if 'สายพันธุ์' in q or 'variety' in q_norm or 'breed' in q_norm:
+        return (
+            "แนะนำสายพันธุ์กาแฟสำหรับเอสเพรสโซ: เลือกกาแฟคั่วเข้ม (dark roast) เช่น Brazilian Santos, Indonesian Sumatra หรอื Italian Roast ที่มีบอดี้หนาและรสขมหวม เหมาะสมำหรับการชงที่ต้องการ crema ที่สวยงาม"
+        )
+    if 'ลด' in q or 'reduce bitterness' in q_norm:
+        return (
+            "วิธีลดความขมของกาแฟ: ใช้น้ำอุณหภูมิไม่เกิน 96°C (ความร้อนจะทำให้ขม), ลดเวลาชง, หรือใช้กาแฟคั่วอ่อน แทน นอกจากนี้สามารถเพิ่มนม ครีม หรือน้ำตาลเพื่อลดความขมและรสชาติที่หนัก"
+        )
+    if 'ไม่ชอบ' in q or 'รสขม' in q or 'ไม่ชอบรสขม' in q or 'ไม่ชอบขม' in q:
+        return (
+            "เมนูแนะนำสำหรับคนไม่ชอบรสขม: ลองเมนูที่ใส่นมเยอะขึ้น เช่น Latte หรือ Flat White, หรือเลือกกาแฟคั่วอ่อน (light roast) ที่มีความเปรี้ยว-หวานแทนความขม และเพิ่มไซรัปรสหวานหรือคาราเมลตามชอบ"
+        )
+
+    # If OpenAI client is not configured, return the generic guidance message
     if not openai_client:
-        return "ขออภัย ระบบ AI ยังไม่พร้อมใช้งาน กรุณาติดต่อผู้ดูแลระบบ"
+        return (
+            "ขณะนี้ระบบ AI ยังไม่พร้อมใช้งาน แต่ฉันช่วยได้ด้วยคำแนะนำทั่วไป: - ถามเกี่ยวกับประเภทกาแฟ (เช่น Arabica, Robusta) - ถามเกี่ยวกับวิธีการชง (เช่น Espresso, Pour-over) - ถามเกี่ยวกับผลกระทบต่อสุขภาพ ขออภัย ฉันยังไม่สามารถเชื่อมต่อกับบริการ AI ได้ขณะนี้ แต่สามารถให้คำแนะนำทั่วไปเกี่ยวกับกาแฟได้ โปรดลองถามโดยระบุหัวข้อ เช่น 'วิธีชง', 'ประเภทกาแฟ' หรือ 'ผลกระทบต่อสุขภาพ'"
+        )
     
     try:
         prompt = f"""คุณเป็นผู้เชี่ยวชาญด้านกาแฟและยังเป็นเจ้าหน้าที่ของร้านกาแฟ Deluxe Cafe 
