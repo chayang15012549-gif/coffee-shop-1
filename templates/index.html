@@ -1160,29 +1160,58 @@
             </div>
             <div id="ai-messages"></div>
             <div class="ai-presets-container" id="ai-presets-container">
-                <div class="ai-presets-grid">
-                    <div class="ai-preset-category">
-                        <h6>การชง</h6>
-                        <div class="ai-preset-list">
-                            <button class="ai-preset-btn" data-question="วิธีชงกาแฟ pour-over?">Pour-over: วิธีชง</button>
-                            <button class="ai-preset-btn" data-question="วิธีชงกาแฟแบบ French press?">French press: วิธีชง</button>
-                            <button class="ai-preset-btn" data-question="วิธีชงเอสเพรสโซที่บ้าน?">เอสเพรสโซ: วิธีชง</button>
+                <div class="accordion accordion-flush" id="ai-presets-accordion">
+                    <!-- การชง -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-brewing" aria-expanded="false">
+                                <i class="fas fa-coffee"></i> การชง
+                            </button>
+                        </h2>
+                        <div id="collapse-brewing" class="accordion-collapse collapse" data-bs-parent="#ai-presets-accordion">
+                            <div class="accordion-body">
+                                <div class="ai-preset-list">
+                                    <button class="ai-preset-btn" data-question="วิธีชงกาแฟ pour-over?">Pour-over</button>
+                                    <button class="ai-preset-btn" data-question="วิธีชงกาแฟแบบ French press?">French Press</button>
+                                    <button class="ai-preset-btn" data-question="วิธีชงเอสเพรสโซที่บ้าน?">Espresso</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="ai-preset-category">
-                        <h6>ความรู้ทั่วไป</h6>
-                        <div class="ai-preset-list">
-                            <button class="ai-preset-btn" data-question="ความแตกต่างระหว่าง Arabica และ Robusta">Arabica vs Robusta</button>
-                            <button class="ai-preset-btn" data-question="วิธีเก็บเมล็ดกาแฟให้คงคุณภาพ">วิธีเก็บเมล็ดกาแฟ</button>
-                            <button class="ai-preset-btn" data-question="แนะนำสายพันธุ์กาแฟสำหรับเอสเพรสโซ">แนะนำสายพันธุ์</button>
+                    
+                    <!-- ความรู้ทั่วไป -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-knowledge" aria-expanded="false">
+                                <i class="fas fa-lightbulb"></i> ความรู้ทั่วไป
+                            </button>
+                        </h2>
+                        <div id="collapse-knowledge" class="accordion-collapse collapse" data-bs-parent="#ai-presets-accordion">
+                            <div class="accordion-body">
+                                <div class="ai-preset-list">
+                                    <button class="ai-preset-btn" data-question="ความแตกต่างระหว่าง Arabica และ Robusta">Arabica vs Robusta</button>
+                                    <button class="ai-preset-btn" data-question="วิธีเก็บเมล็ดกาแฟให้คงคุณภาพ">การเก็บเมล็ด</button>
+                                    <button class="ai-preset-btn" data-question="แนะนำสายพันธุ์กาแฟสำหรับเอสเพรสโซ">สายพันธุ์</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="ai-preset-category">
-                        <h6>สุขภาพ & เมนู</h6>
-                        <div class="ai-preset-list">
-                            <button class="ai-preset-btn" data-question="ผลกระทบของการดื่มกาแฟต่อสุขภาพ">ผลกระทบต่อสุขภาพ</button>
-                            <button class="ai-preset-btn" data-question="แนะนำเมนูสำหรับคนไม่ชอบรสขม">เมนูสำหรับไม่ชอบขม</button>
-                            <button class="ai-preset-btn" data-question="วิธีลดความขมของกาแฟ">วิธีลดความขม</button>
+                    
+                    <!-- สุขภาพ & เมนู -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-health" aria-expanded="false">
+                                <i class="fas fa-heart"></i> สุขภาพ & เมนู
+                            </button>
+                        </h2>
+                        <div id="collapse-health" class="accordion-collapse collapse" data-bs-parent="#ai-presets-accordion">
+                            <div class="accordion-body">
+                                <div class="ai-preset-list">
+                                    <button class="ai-preset-btn" data-question="ผลกระทบของการดื่มกาแฟต่อสุขภาพ">สุขภาพ</button>
+                                    <button class="ai-preset-btn" data-question="แนะนำเมนูสำหรับคนไม่ชอบรสขม">เมนู (ไม่ขม)</button>
+                                    <button class="ai-preset-btn" data-question="วิธีลดความขมของกาแฟ">ลดความขม</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1538,27 +1567,59 @@
         }
 
         .ai-presets-container {
-            padding: 12px;
+            padding: 0;
             border-top: 1px solid #f0f0f0;
             background: #fafafa;
+            max-height: 300px;
+            overflow-y: auto;
         }
 
-        .ai-presets-grid {
-            display: grid;
-            grid-template-columns: repeat(1, 1fr);
-            gap: 10px;
+        #ai-presets-accordion {
+            border: none;
         }
 
-        .ai-preset-category h6 {
-            margin: 0 0 6px 0;
+        .accordion-item {
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .accordion-item:last-child {
+            border-bottom: none;
+        }
+
+        .accordion-header {
+            margin: 0;
+        }
+
+        .accordion-button {
+            padding: 10px 12px;
             font-size: 0.95rem;
+            font-weight: 600;
             color: var(--primary-color);
-            font-weight: 700;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .accordion-button:not(.collapsed) {
+            background: #f0f0f0;
+            box-shadow: none;
+        }
+
+        .accordion-button i {
+            margin-right: 8px;
+            width: 18px;
+            text-align: center;
+        }
+
+        .accordion-body {
+            padding: 10px;
+            background: white;
         }
 
         .ai-preset-list {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             flex-wrap: wrap;
         }
 
@@ -1568,21 +1629,16 @@
             padding: 8px 10px;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: var(--dark-brown);
             box-shadow: 0 2px 6px rgba(0,0,0,0.04);
             transition: transform 0.12s ease, box-shadow 0.12s ease;
+            white-space: nowrap;
         }
 
         .ai-preset-btn:hover {
             transform: translateY(-3px);
             box-shadow: 0 6px 18px rgba(0,0,0,0.08);
-        }
-
-        @media (min-width: 720px) {
-            .ai-presets-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
         }
 
         .ai-chat-header {
