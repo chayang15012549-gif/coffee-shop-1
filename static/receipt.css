@@ -1,0 +1,74 @@
+/* receipt.css
+   Minimal Luxury · Warm coffee palette · subtle glassmorphism
+   - Use with templates/receipt.html
+   - Print-friendly rules included
+*/
+
+:root{
+  --coffee-dark:#5C3D2E;
+  --coffee-mid:#A67C52;
+  --coffee-cream:#F3E9E0;
+  --accent:#6B8E23;
+  --muted:#8b7b74;
+}
+
+/* Page layout */
+body{background:linear-gradient(180deg, #fbf9f7 0%, #f6f5f3 100%); color:var(--coffee-dark);}
+.receipt-wrap{max-width:960px;margin:48px auto;padding:12px;}
+
+/* Card with soft shadow + slight glass effect */
+.receipt{background: rgba(255,255,255,0.88); backdrop-filter: blur(6px) saturate(1.05); border-radius:14px; padding:28px; box-shadow: 0 10px 30px rgba(84,64,58,0.08), inset 0 1px 0 rgba(255,255,255,0.6);}
+
+.brand .logo{width:60px;height:60px;border-radius:10px;background:linear-gradient(135deg,var(--coffee-dark),var(--coffee-mid));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:1.05rem;box-shadow:0 6px 20px rgba(92,61,46,0.12)}
+.brand h4{font-family: 'Playfair Display', serif; font-weight:700; margin-bottom:0}
+.muted{color:var(--muted)}
+.meta{font-size:0.95rem;color:var(--muted)}
+
+/* Table */
+.items-table{border-collapse:separate;border-spacing:0 10px}
+.items-table thead th{border-bottom:0;color:var(--coffee-mid);font-weight:700;padding-bottom:6px}
+.items-table tbody tr{background:linear-gradient(180deg, rgba(243,233,224,0.7), rgba(255,255,255,0.6));border-radius:10px}
+.items-table td{padding:14px 12px;vertical-align:middle;border:none}
+.item-name{font-weight:600;color:var(--coffee-dark)}
+.small{font-size:0.85rem}
+
+/* Totals box */
+.totals{margin-top:12px;font-weight:600}
+#totalPrice{font-size:1.3rem;color:var(--coffee-dark);padding:6px 10px;border-radius:8px}
+
+/* Animated highlight for total */
+@keyframes totalGlow{
+  0%{box-shadow:0 0 0 rgba(107,142,35,0); transform:translateY(0);}
+  40%{box-shadow:0 8px 30px rgba(107,142,35,0.12); transform:translateY(-3px);} 
+  100%{box-shadow:0 0 0 rgba(107,142,35,0); transform:translateY(0);} 
+}
+.total-highlight{animation: totalGlow 1.6s ease-in-out both}
+
+/* Buttons: modern ghost + primary */
+.btns {display:flex;gap:8px;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;border:0;font-weight:600}
+.btn svg{display:inline-block}
+.btn-ghost{background:rgba(92,61,46,0.04);color:var(--coffee-dark);border:1px solid rgba(92,61,46,0.06)}
+.btn-ghost:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(84,64,58,0.06)}
+.btn-primary{background:linear-gradient(90deg,var(--coffee-dark),var(--coffee-mid));color:#fff;padding:9px 14px}
+.btn-primary:hover{filter:brightness(1.03);transform:translateY(-2px)}
+
+/* Small responsive tweaks */
+@media (max-width:576px){
+  .receipt-wrap{margin:20px 12px}
+  .brand .logo{width:48px;height:48px}
+  #totalPrice{font-size:1.05rem}
+}
+
+/* Subtle fade-in animation for the card */
+.receipt{opacity:0; transform:translateY(8px); transition:opacity .45s ease, transform .45s ease}
+.receipt.show{opacity:1; transform:translateY(0)}
+
+/* Print-friendly rules */
+@media print{
+  body{background:white;color:#000}
+  .no-print, .btns{display:none!important}
+  .receipt{box-shadow:none; border-radius:0; background:white; padding:12px}
+  .items-table tbody tr{background:transparent}
+  a{color:inherit;text-decoration:none}
+}

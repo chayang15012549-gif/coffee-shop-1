@@ -397,6 +397,14 @@ def admin():
         return redirect(url_for('login'))
 
 
+@app.route('/receipt')
+def receipt():
+    """หน้าแสดงใบเสร็จ (client-side จะเก็บ order data ใน sessionStorage)
+    การเรียกผ่าน GET (redirect จากหน้า cart.js)
+    """
+    return render_template('receipt.html')
+
+
 
 # ==================== Database Initialization ====================
 

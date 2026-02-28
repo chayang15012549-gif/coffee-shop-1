@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Deluxe Cafe - Receipt</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- External receipt styles (Minimal Luxury, glassmorphism, print friendly) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='receipt.css') }}">
+</head>
+<body>
+    <div class="receipt-wrap">
+        <div class="receipt">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="brand">
+                    <div class="logo">DC</div>
+                    <div>
+                        <h4 class="mb-0">Deluxe Cafe</h4>
+                        <div class="muted">ใบเสร็จการสั่งซื้อ / Receipt</div>
+                    </div>
+                </div>
+                <div class="no-print btns">
+                        <button class="btn btn-ghost" id="btnCopy" aria-label="Copy receipt">
+                            <!-- SVG icon + label -->
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                                <path d="M9 9H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                <rect x="9" y="3" width="11" height="14" rx="2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            <span>คัดลอก</span>
+                        </button>
+
+                        <button class="btn btn-ghost" id="btnPrint" aria-label="Print receipt">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                                <path d="M6 9V2h12v7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                <rect x="3" y="9" width="18" height="11" rx="2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M7 13h10M7 17h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            <span>พิมพ์</span>
+                        </button>
+
+                        <a href="/" class="btn btn-primary">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                                <path d="M3 12h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M10 5l-7 7 7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            <span>กลับหน้าหลัก</span>
+                        </a>
+                    </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <div class="meta">หมายเลขคำสั่งซื้อ: <strong id="orderNumber"></strong></div>
+                    <div class="meta">วันที่สั่ง: <span id="orderDate"></span></div>
+                </div>
+                <div class="col-md-6 text-md-end muted">
+                    <div>Deluxe Cafe • บริการกาแฟพรีเมียม</div>
+                    <div>support@deluxecafe.example</div>
+                </div>
+            </div>
+
+            <div id="receiptContent"></div>
+
+            <div id="noOrder" style="display:none;" class="text-center mt-4">
+                <p class="text-danger">ไม่พบข้อมูลคำสั่งซื้อ กรุณากลับไปยังตะกร้าแล้วทำการชำระเงินใหม่</p>
+                <a href="/cart" class="btn btn-secondary">กลับไปตะกร้า</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    /* Small client-side renderer and interactions
+       - Renders orderData from sessionStorage
+       - Animates total price highlight on render
+       - Print and copy handlers
+    */
+    const formatMoney = n => Number(n).toLocaleString('th-TH');
+
+    function animateTotal(el){
+        if(!el) return;
+        el.classList.add('total-highlight');
+        // remove after animation so future updates can retrigger
+        setTimeout(()=> el.classList.remove('total-highlight'), 1800);
+    }
+
+    function renderOrder(){
+        const raw = sessionStorage.getItem('orderData');
+        if(!raw){ document.getElementById('noOrder').style.display='block'; return; }
+        const order = JSON.parse(raw);
+        document.getElementById('orderNumber').textContent = order.orderNumber;
+        document.getElementById('orderDate').textContent = order.orderDate;
+
+        let html = '';
+        html += '<div class="table-responsive">';
+        html += '<table class="table items-table mb-0">';
+        html += '<thead><tr><th>สินค้า & รายละเอียด</th><th class="text-end">ราคา</th><th class="text-center">จำนวน</th><th class="text-end">รวม</th></tr></thead>';
+        html += '<tbody>';
+        order.items.forEach(it =>{
+            const qty = Number(it.quantity);
+            const line = it.price * qty;
+            html += `<tr>`;
+            html += `<td><div class="item-name">${it.name}</div><div class="muted small">ขนาด: ${it.size || '-'} • ระดับคั่ว: ${it.roast || '-'} ${it.addons && it.addons.length? '• เพิ่ม: '+it.addons.join(', '): ''}</div></td>`;
+            html += `<td class="text-end">฿${formatMoney(it.price)}</td>`;
+            html += `<td class="text-center">${qty}</td>`;
+            html += `<td class="text-end">฿${formatMoney(line)}</td>`;
+            html += `</tr>`;
+        });
+        html += '</tbody></table></div>';
+
+        html += '<div class="d-flex justify-content-end mt-3">';
+        html += `<div style="min-width:260px">`;
+        html += `<div class="d-flex justify-content-between"><div class="muted">Subtotal</div><div>฿${formatMoney(order.subtotal)}</div></div>`;
+        html += `<div class="d-flex justify-content-between"><div class="muted">Shipping</div><div>฿${formatMoney(order.shipping)}</div></div>`;
+        html += `<div class="d-flex justify-content-between"><div class="muted">Tax (7%)</div><div>฿${formatMoney(order.tax)}</div></div>`;
+        html += `<hr>`;
+        html += `<div class="d-flex justify-content-between totals"><div>รวมทั้งสิ้น</div><div id="totalPrice"><strong>฿${formatMoney(order.total)}</strong></div></div>`;
+        html += `</div></div>`;
+
+        document.getElementById('receiptContent').innerHTML = html;
+        // animate total
+        animateTotal(document.getElementById('totalPrice'));
+    }
+
+    document.addEventListener('DOMContentLoaded', function(){
+        renderOrder();
+        // Ensure receipt card becomes visible (fade-in) even when no order
+        const card = document.querySelector('.receipt');
+        if(card) setTimeout(()=>card.classList.add('show'), 80);
+    });
+
+    document.addEventListener('click', function(e){
+        const target = e.target.closest && e.target.closest('button') ? e.target.closest('button') : e.target;
+        if(!target) return;
+        if(target.id === 'btnPrint') return window.print();
+        if(target.id === 'btnCopy'){
+            const txt = document.getElementById('receiptContent').innerText || '';
+            navigator.clipboard?.writeText(txt).then(()=>{ alert('คัดลอกใบเสร็จเรียบร้อย'); }).catch(()=>{ alert('ไม่สามารถคัดลอกได้'); });
+        }
+    });
+    </script>
+</body>
+</html>
