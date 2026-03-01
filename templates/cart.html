@@ -834,8 +834,19 @@
             },
             
             removeFromCart(productId) {
+                // ignore invalid id
+                if (isNaN(productId)) {
+                    // purge any entries with bad ids as well
+                    const cart = this.getCart().filter(item => !isNaN(Number(item.id)));
+                    this.saveCart(cart);
+                    this.renderCart();
+                    updateCartSummary();
+                    showNotification('ลบสินค้าที่ไม่ระบุรหัสแล้ว', 'success');
+                    return;
+                }
+
                 const cart = this.getCart();
-                const updatedCart = cart.filter(item => item.id !== productId);
+                const updatedCart = cart.filter(item => Number(item.id) !== productId);
                 this.saveCart(updatedCart);
                 this.renderCart();
                 updateCartSummary();
@@ -875,6 +886,13 @@
                 let html = '<h2 class="cart-title"><i class="fas fa-coffee"></i>Cart Items</h2>';
                 
                 cart.forEach((item, index) => {
+                    // coerce id to valid number; handle legacy NaN/null
+                    let itemId = Number(item.id);
+                    if (isNaN(itemId)) {
+                        // if id is invalid, generate a unique fallback so we can still remove it
+                        itemId = Date.now() + index;
+                    }
+
                     // determine image HTML
                     let imgHtml = '';
                     if (item.image && (item.image.startsWith('http') || item.image.startsWith('data:'))) {
@@ -883,7 +901,7 @@
                         imgHtml = `<i class="${item.image || 'fas fa-mug-hot'}"></i>`;
                     }
                     html += `
-                    <div class="cart-item" data-product-id="${item.id}">
+                    <div class="cart-item" data-product-id="${itemId}">
                         <div class="item-image">
                             ${imgHtml}
                         </div>
@@ -892,14 +910,14 @@
                             <div class="item-price">฿${item.price.toLocaleString('th-TH')}</div>
                             <div class="item-controls">
                                 <div class="quantity-control">
-                                    <button onclick="CartManager.updateQuantity(${item.id}, ${item.quantity - 1})">−</button>
+                                    <button onclick="CartManager.updateQuantity(${itemId}, ${item.quantity - 1})">−</button>
                                     <input type="number" value="${item.quantity}" readonly>
-                                    <button onclick="CartManager.updateQuantity(${item.id}, ${item.quantity + 1})">+</button>
+                                    <button onclick="CartManager.updateQuantity(${itemId}, ${item.quantity + 1})">+</button>
                                 </div>
                                 <button class="customize-btn" onclick="toggleCustomize(this)">
                                     <i class="fas fa-edit"></i> Customize
                                 </button>
-                                <button class="remove-btn" onclick="CartManager.removeFromCart(${item.id})">
+                                <button class="remove-btn" onclick="CartManager.removeFromCart(${itemId})" data-product-id="${itemId}">
                                     <i class="fas fa-trash"></i> Remove
                                 </button>
                             </div>
@@ -1114,6 +1132,19 @@
         }
         
         // Initialize on page load
+        // global click handler for remove buttons (delegation)
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('.remove-btn');
+            if (!btn) return;
+            const itemDiv = btn.closest('.cart-item');
+            if (itemDiv && itemDiv.dataset.productId) {
+                CartManager.removeFromCart(parseInt(itemDiv.dataset.productId));
+            } else if (itemDiv) {
+                // fallback for static/example items
+                itemDiv.remove();
+            }
+        });
+
         document.addEventListener('DOMContentLoaded', function() {
             CartManager.renderCart();
             updateCartSummary();

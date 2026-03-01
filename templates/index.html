@@ -1062,7 +1062,7 @@
                                         <i class="fas fa-star"></i>
                                         <i class="fas fa-star"></i>
                                         <i class="fas fa-star-half-alt"></i>
-                                        <span class="rating-text">(0 รีวิว)</span>
+                                        <span class="rating-text">({{ review_counts[product.id] if review_counts else 0 }} รีวิว)</span>
                                     </div>
                                     <div class="product-buttons">
                                         {% if product.is_favorite %}
@@ -1340,7 +1340,12 @@
                 btn.addEventListener('click', function(e) {
                     e.preventDefault();
                     const productCard = this.closest('.product-card');
-                    const productId = parseInt(productCard.querySelector('.product-name').textContent.match(/\d+/) || Date.now());
+                    // use explicit data attribute instead of parsing from name (avoids injection issues)
+                    let productId = parseInt(productCard.dataset.productId);
+                    if (isNaN(productId)) {
+                        // fallback: generate unique id as timestamp
+                        productId = Date.now();
+                    }
                     
                     const product = {
                         id: productId,

@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 import os
 from werkzeug.utils import secure_filename
 import socket
+import random
 try:
     from openai import OpenAI
     OPENAI_AVAILABLE = True
@@ -174,7 +175,9 @@ class Product(db.Model):
 def index():
     """หน้าแรก - แสดงสินค้า เรียงลำดับโปรดด้านบน"""
     products = Product.query.order_by(Product.is_favorite.desc(), Product.id).all()
-    return render_template('index.html', products=products)
+    # สร้างจำนวนรีวิวปลอม (1-20) สำหรับแต่ละสินค้า
+    review_counts = {p.id: random.randint(1, 20) for p in products}
+    return render_template('index.html', products=products, review_counts=review_counts)
 
 @app.route('/cart')
 def cart():
