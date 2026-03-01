@@ -621,6 +621,27 @@
                 flex-direction: column;
             }
         }
+
+        /* Toast notifications */
+        #toast-container {
+            position: fixed;
+            right: 24px;
+            bottom: 24px;
+            z-index: 2000;
+        }
+        .site-toast{ display:flex; gap:12px; align-items:flex-start; min-width:260px; max-width:360px; background: #fff; border-radius:12px; padding:12px; box-shadow:0 10px 30px rgba(0,0,0,0.12); border-left:4px solid var(--success-color); overflow:hidden; transform:translateY(12px) scale(.98); opacity:0; transition:all .28s ease; }
+        .site-toast.show{ transform:translateY(0) scale(1); opacity:1 }
+        .site-toast.hide{ transform:translateY(6px) scale(.98); opacity:0 }
+        .site-toast.success{ border-left-color: var(--success-color); }
+        .site-toast.error{ border-left-color: var(--danger-color); }
+        .site-toast .toast-left{ display:flex; align-items:center; justify-content:center; padding-right:8px; }
+        .site-toast .toast-icon{ font-size:1.4rem; color: var(--success-color); }
+        .site-toast.error .toast-icon{ color: var(--danger-color); }
+        .site-toast .toast-body{ flex:1; }
+        .site-toast .toast-title{ font-weight:700; color:#333; margin-bottom:2px; }
+        .site-toast .toast-message{ color:#555; }
+        .site-toast .toast-close{ background:none; border:none; font-size:1.2rem; line-height:1; cursor:pointer; color:#888; padding:0 4px; }
+        @media (max-width:480px){ #toast-container{ right:12px; left:12px; bottom:14px } .site-toast{ width:100%; max-width:none } }
     </style>
 </head>
 <body>
@@ -750,6 +771,7 @@
                                 <th>ชื่อสินค้า</th>
                                 <th>ราคา</th>
                                 <th>คำอธิบาย</th>
+                                <th>รีวิว</th>
                                 <th>การจัดการ</th>
                             </tr>
                         </thead>
@@ -769,6 +791,14 @@
                                 <td>
                                     {% if product.description %}
                                         <small>{{ product.description[:50] }}...</small>
+                                    {% else %}
+                                        <small style="color: #999;">-</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% set rev = reviews.get(product.id, '') %}
+                                    {% if rev %}
+                                        <small>{{ rev[:50] }}{% if rev|length > 50 %}... <a href="#" onclick="showReview({{ product.id }}); return false;">more</a>{% endif %}</small>
                                     {% else %}
                                         <small style="color: #999;">-</small>
                                     {% endif %}
@@ -809,6 +839,17 @@
             <div class="modal-buttons">
                 <button type="button" class="btn-confirm" id="confirmBtn">ใช่, ลบเลย</button>
                 <button type="button" class="btn-cancel" onclick="closeDeleteModal()">ยกเลิก</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Review Modal -->
+    <div id="reviewModal" class="modal">
+        <div class="modal-content">
+            <h5><i class="fas fa-comment-dots"></i> รีวิว</h5>
+            <p id="reviewText" style="color:#333;"></p>
+            <div class="modal-buttons">
+                <button type="button" class="btn-confirm" onclick="closeReviewModal()">ปิด</button>
             </div>
         </div>
     </div>
@@ -862,6 +903,58 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         let deleteForm = null;
+        // allow JS access to reviews passed from server
+        const reviewsData = {{ reviews|tojson }} || {};
+
+        // toast notification helper
+        function showNotification(message, type='success', title=null) {
+            let container = document.getElementById('toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toast-container';
+                container.setAttribute('aria-live', 'polite');
+                container.setAttribute('aria-atomic', 'true');
+                document.body.appendChild(container);
+            }
+
+            const toast = document.createElement('div');
+            toast.className = 'site-toast ' + type;
+            const iconClass = type === 'error' ? 'fas fa-exclamation-circle' : 'fas fa-check';
+            const titleText = title || (type === 'error' ? 'ข้อผิดพลาด' : 'สำเร็จ');
+
+            toast.innerHTML = `
+                    <div class="toast-left">
+                        <div class="toast-icon"><i class="${iconClass}"></i></div>
+                    </div>
+                    <div class="toast-body">
+                        <div class="toast-title">${titleText}</div>
+                        <div class="toast-message">${String(message)}</div>
+                    </div>
+                    <button class="toast-close" aria-label="close">&times;</button>
+                `;
+
+            toast.querySelector('.toast-close').addEventListener('click', () => {
+                toast.classList.add('hide');
+                setTimeout(() => toast.remove(), 300);
+            });
+
+            container.appendChild(toast);
+            // trigger animation
+            setTimeout(() => toast.classList.add('show'), 10);
+            setTimeout(() => {
+                toast.classList.add('hide');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        function showReview(id) {
+            const text = reviewsData[id] || '(ไม่มีรีวิว)';
+            document.getElementById('reviewText').textContent = text;
+            document.getElementById('reviewModal').classList.add('show');
+        }
+        function closeReviewModal() {
+            document.getElementById('reviewModal').classList.remove('show');
+        }
 
         function confirmDelete(productName, form) {
             deleteForm = form;
@@ -921,7 +1014,7 @@
             const description = document.getElementById('editDescription').value;
 
             if (!name || !price) {
-                alert('กรุณากรอกชื่อสินค้าและราคา');
+                showNotification('กรุณากรอกชื่อสินค้าและราคา', 'error');
                 return;
             }
 
@@ -941,16 +1034,16 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success || data.message) {
-                    alert('✅ บันทึกการแก้ไขสำเร็จ');
+                    showNotification('บันทึกการแก้ไขสำเร็จ', 'success');
                     closeEditModal();
                     location.reload(); // Reload page to show updated data
                 } else {
-                    alert('❌ เกิดข้อผิดพลาด: ' + (data.error || 'Unknown error'));
+                    showNotification('เกิดข้อผิดพลาด: ' + (data.error || 'Unknown error'), 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('❌ เกิดข้อผิดพลาดในการบันทึก');
+                showNotification('เกิดข้อผิดพลาดในการบันทึก', 'error');
             });
         }
 
@@ -971,7 +1064,7 @@
             const button = this;
 
             if (!nameInput.value.trim()) {
-                alert('กรุณากรอกชื่อสินค้าก่อน');
+                showNotification('กรุณากรอกชื่อสินค้าก่อน', 'error');
                 nameInput.focus();
                 return;
             }
@@ -1004,11 +1097,11 @@
                         descriptionInput.style.borderColor = '';
                     }, 2000);
                 } else {
-                    alert('❌ ' + (data.error || 'ไม่สามารถสร้างรายละเอียด'));
+                    showNotification(data.error ? data.error : 'ไม่สามารถสร้างรายละเอียด', 'error');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('❌ เกิดข้อผิดพลาด: ' + error.message);
+                showNotification('เกิดข้อผิดพลาด: ' + error.message, 'error');
             } finally {
                 // Restore button state
                 button.disabled = false;
