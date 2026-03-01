@@ -397,12 +397,61 @@ def admin():
         return redirect(url_for('login'))
 
 
+@app.route('/checkout', methods=['GET', 'POST'])
+def checkout():
+    """Checkout page: แสดงฟอร์มช่องทางชำระเงิน (GET) และรับข้อมูลเมื่อ POST
+
+    - GET: รับ optional query param `total` เพื่อแสดงยอดรวม
+    - POST: ตรวจสอบ validation เบื้องต้นตามช่องทางการชำระเงิน และบันทึก `last_order` ใน session
+    """
+    if request.method == 'POST':
+        data = request.form
+        payment_method = data.get('payment_method')
+        amount = data.get('amount') or 0
+
+        errors = []
+        # Basic validation
+        if not payment_method:
+            errors.append('กรุณาเลือกช่องทางการชำระเงิน')
+
+        if payment_method == 'card':
+            card_number = (data.get('card_number') or '').replace(' ', '')
+            if not card_number.isdigit() or len(card_number) < 13:
+                errors.append('หมายเลขบัตรไม่ถูกต้อง')
+
+        if payment_method == 'cod' and not data.get('cod_confirm'):
+            errors.append('กรุณายอมรับเงื่อนไข COD')
+
+        if errors:
+            # ส่งกลับหน้า checkout พร้อมข้อความ error และค่าที่กรอกไว้
+            return render_template('checkout.html', errors=errors, total=amount)
+
+        # จำลองการสร้างคำสั่งซื้อ: บันทึกข้อมูลสำคัญลง session แล้วไปหน้า receipt
+        session['last_order'] = {
+            'payment_method': payment_method,
+            'amount': amount,
+            'details': {k: v for k, v in data.items()}
+        }
+
+        return redirect(url_for('receipt'))
+
+    # GET
+    total = request.args.get('total')
+    try:
+        total = float(total) if total else None
+    except Exception:
+        total = None
+    return render_template('checkout.html', total=total)
+
+
 @app.route('/receipt')
 def receipt():
     """หน้าแสดงใบเสร็จ (client-side จะเก็บ order data ใน sessionStorage)
     การเรียกผ่าน GET (redirect จากหน้า cart.js)
     """
     return render_template('receipt.html')
+
+
 
 
 
