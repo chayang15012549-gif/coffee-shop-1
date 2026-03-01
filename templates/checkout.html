@@ -23,6 +23,25 @@
         .qr-box{ width:180px; height:180px; display:flex; align-items:center; justify-content:center; background:white; border-radius:12px; box-shadow:0 6px 18px rgba(0,0,0,0.06) }
         @media (max-width:767px){ .qr-box{ width:140px;height:140px } }
         .small-muted{ color:#666; font-size:0.9rem }
+        /* custom styles for static QR card and button */
+        .qr-card {
+            background: #fff9f3;
+            border: 1px solid #dec8b3;
+            border-radius: 16px;
+            max-width: 320px;
+            box-shadow: 0 6px 24px rgba(0,0,0,0.1);
+        }
+        .btn-coffee {
+            background: linear-gradient(135deg, #A0522D, #5C3D2E);
+            color: white;
+            border-radius: 12px;
+            padding: 10px 18px;
+            font-weight: 600;
+        }
+        .btn-coffee:hover { background: linear-gradient(135deg, #5C3D2E, #A0522D); }
+        @media (max-width:767px) {
+            .qr-card { max-width: 90%; padding: 20px; }
+        }
     </style>
 </head>
 <body>
@@ -153,6 +172,14 @@
                                             <div class="mt-2">
                                                 <button type="button" class="btn btn-outline-secondary btn-sm" id="copy-promptpay">คัดลอกรหัส</button>
                                             </div>
+                                            <!-- editable data for QR -->
+                                            <div class="mt-3">
+                                                <label for="promptpay-data" class="form-label small-muted">แก้ไขข้อมูล QR</label>
+                                                <div class="input-group">
+                                                    <input type="text" id="promptpay-data" class="form-control form-control-sm" value="PromptPay: deluxecafe">
+                                                    <button type="button" class="btn btn-sm btn-primary" id="update-qr">อัปเดต</button>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="mt-3 small-muted">หมายเหตุ: ระบบนี้แสดง QR เป็นตัวอย่าง เทียบเท่าการใช้งานจริง ต้องมีเซิร์ฟเวอร์/บัญชีพร้อมเพย์ของร้าน</div>
@@ -185,6 +212,13 @@
                             </div>
                         </div>
                     </form>
+
+                    <!-- link to receipt in case user already has an order saved -->
+                    <div class="text-center mt-4">
+                        <a href="/receipt" class="btn btn-outline-secondary">
+                            <i class="fas fa-receipt"></i> ดูใบเสร็จ (Receipt)
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -224,6 +258,19 @@
                     alert('คัดลอกเรียบร้อย: '+text);
                 }).catch(()=>{ alert('ไม่สามารถคัดลอกได้'); });
             });
+
+            // allow editing of the QR data and regenerate image
+            const updateBtn = document.getElementById('update-qr');
+            const dataInput = document.getElementById('promptpay-data');
+            const qrImg = document.getElementById('promptpay-qr-img');
+            if(updateBtn && dataInput && qrImg) {
+                updateBtn.addEventListener('click', function(){
+                    const txt = dataInput.value.trim();
+                    if(txt) {
+                        qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(txt);
+                    }
+                });
+            }
 
             // format card number (xxxx xxxx xxxx xxxx)
             const cardNumberInput = document.getElementById('card-number');

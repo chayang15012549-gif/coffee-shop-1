@@ -1004,7 +1004,7 @@
             const tax = Math.round(subtotal * 0.07);
             const total = subtotal + shipping + tax;
             
-            // Store order data in sessionStorage
+            // Store order data in sessionStorage (used later by receipt page)
             const orderData = {
                 items: cartItems,
                 subtotal: subtotal,
@@ -1014,12 +1014,12 @@
                 orderDate: new Date().toLocaleString('th-TH'),
                 orderNumber: 'ORD-' + Date.now()
             };
-            
             sessionStorage.setItem('orderData', JSON.stringify(orderData));
-            
-            // Clear cart and redirect
+
+            // Clear cart (we're moving to checkout) and redirect with total query param
             CartManager.saveCart([]);
-            window.location.href = '/receipt';
+            // pass the computed total so checkout page can display the amount
+            window.location.href = '/checkout?total=' + encodeURIComponent(total);
         }
         
         // Initialize on page load

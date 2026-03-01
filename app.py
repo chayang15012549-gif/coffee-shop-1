@@ -338,7 +338,21 @@ def dashboard():
         return redirect(url_for('login'))
     
     products = Product.query.all()
-    return render_template('admin.html', products=products, username=session.get('username'))
+    # สร้างรีวิวตัวอย่าง (fake reviews) สำหรับแต่ละสินค้า
+    sample_reviews = [
+        "รสชาติดีมาก! หอมเข้มข้นและไม่ขมเกินไป เหมาะสำหรับคนรักกาแฟจริงๆ",
+        "กาแฟนุ่ม ละมุนดีครับ บริการดีด้วย",
+        "ออกเปรี้ยวนิดๆ หวานบางๆ รู้สึกสดชื่น",
+        "เข้มข้นมีบอดี้ดีสุด ราคาเหมาะสม",
+        "สั่งเป็นประจำ ทุกแก้วไม่เคยน้อยหน้าเลยครับ",
+        "กลิ่นกาแฟหอมสดชื่นมากๆ รสชาติกลมกล่อม",
+        "ดีงามมากค่ะ มีความหอมของถั่วและช็อกโกแลต",
+        "หวานน้อยขมกำลังดี ถูกใจจริงๆ",
+        "กาแฟดี แต่ราคาแรงไปหน่อย",
+        "เป็นกาแฟที่ดีที่สุดที่เคยลองในร้านนี้"
+    ]
+    reviews = {p.id: sample_reviews[p.id % len(sample_reviews)] for p in products}
+    return render_template('admin.html', products=products, username=session.get('username'), reviews=reviews)
 
 @app.route('/add-product', methods=['GET', 'POST'])
 def add_product_admin():
@@ -443,6 +457,15 @@ def checkout():
         total = None
     return render_template('checkout.html', total=total)
 
+@app.route('/payment-notify', methods=['POST'])
+def payment_notify():
+    """Simple endpoint users hit after scanning QR and paying.
+    This could record the notification, send an email, etc. For now just
+    displays a thank-you message.
+    """
+    # In a real app you would validate the session/order and maybe log
+    # the notification to a database or notify staff via email/alert.
+    return render_template('payment_notify.html')
 
 @app.route('/receipt')
 def receipt():
