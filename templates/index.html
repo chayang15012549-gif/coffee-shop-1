@@ -1346,7 +1346,8 @@
                         id: productId,
                         name: productCard.querySelector('.product-name').textContent,
                         price: parseFloat(productCard.querySelector('.product-price').textContent.replace('฿', '').replace(',', '')),
-                        image: productCard.querySelector('.product-image i')?.className || 'fas fa-coffee'
+                        // prefer real image if available, otherwise fall back to icon class
+                        image: productCard.querySelector('.product-image img')?.src || productCard.querySelector('.product-image i')?.className || 'fas fa-coffee'
                     };
                     
                     CartManager.addToCart(product);

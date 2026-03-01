@@ -158,6 +158,20 @@
             height: 120px;
             border-radius: 10px;
             background: linear-gradient(135deg, #f5deb3, #daa520);
+        }
+        .item-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+        .item-image i {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
             display: flex;
             align-items: center;
             justify-content: center;
@@ -816,6 +830,7 @@
             
             saveCart(cart) {
                 localStorage.setItem(this.STORAGE_KEY, JSON.stringify(cart));
+                updateCartBadge();
             },
             
             removeFromCart(productId) {
@@ -824,6 +839,7 @@
                 this.saveCart(updatedCart);
                 this.renderCart();
                 updateCartSummary();
+                showNotification('ลบสินค้าออกจากรถเข็นแล้ว', 'success');
             },
             
             updateQuantity(productId, quantity) {
@@ -859,10 +875,17 @@
                 let html = '<h2 class="cart-title"><i class="fas fa-coffee"></i>Cart Items</h2>';
                 
                 cart.forEach((item, index) => {
+                    // determine image HTML
+                    let imgHtml = '';
+                    if (item.image && (item.image.startsWith('http') || item.image.startsWith('data:'))) {
+                        imgHtml = `<img src="${item.image}" alt="${item.name}" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\"fas fa-mug-hot\"></i>';">`;
+                    } else {
+                        imgHtml = `<i class="${item.image || 'fas fa-mug-hot'}"></i>`;
+                    }
                     html += `
                     <div class="cart-item" data-product-id="${item.id}">
                         <div class="item-image">
-                            <i class="fas fa-mug-hot"></i>
+                            ${imgHtml}
                         </div>
                         <div class="item-details">
                             <div class="item-name">${item.name}</div>
@@ -990,6 +1013,17 @@
             customizeSection.classList.toggle('active');
         }
         
+        // Update cart badge (used across header)
+        function updateCartBadge() {
+            const cart = CartManager.getCart();
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            const badge = document.querySelector('.cart-badge');
+            if (badge) {
+                badge.textContent = totalItems || '0';
+                badge.style.display = totalItems > 0 ? 'flex' : 'none';
+            }
+        }
+
         // Update cart summary
         function updateCartSummary() {
             const cart = CartManager.getCart();
@@ -1083,6 +1117,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             CartManager.renderCart();
             updateCartSummary();
+            updateCartBadge();
         });
     </script>
 </body>
